@@ -1,8 +1,8 @@
 //
-//  main.swift
+//  LocalStorageHandler.swift
 //  RemoveBrowsingData
 //
-//  Created by Aapo Rautiainen on 12/02/2019.
+//  Created by Aapo Rautiainen on 18/02/2019.
 //
 //  This is free and unencumbered software released into the public domain.
 //
@@ -30,30 +30,18 @@
 //  For more information, please refer to <http://unlicense.org/>
 //
 //
-
 import Foundation
 
-func printUsage(binary: String) {
-    print("Usage: \(binary) -w|--whitelist plist-file")
+class LocalStorageHandler : HandlerBase {
+    let _localStorageFolder = "Library/Safari/LocalStorage"
+    let _localStorageExtension = ".localstorage"
+
+    override init(whitelisted: [String]) {
+        super.init(whitelisted: whitelisted)
+    }
+    
+    func removeLocalStorages() {
+        super.removeFromDirectory(isAbsolute: false, from: _localStorageFolder, with: _localStorageExtension)
+    }
+
 }
-
-if CommandLine.arguments.count != 3 {
-    printUsage(binary: CommandLine.arguments[0])
-    exit(2)
-}
-
-if CommandLine.arguments[1] == "-w" || CommandLine.arguments[1] == "--whitelist" {
-    let whitelisted = Whitelist(fileName: CommandLine.arguments[2]).loadWhitelist()
-    let cookieHandler = BrowserCookieHandler(whitelisted: whitelisted)
-    cookieHandler.deleteCookies()
-    let localstorageHandler = LocalStorageHandler(whitelisted: whitelisted)
-    localstorageHandler.removeLocalStorages()
-    let dbHandler = SiteDatabaseHandler(whitelisted: whitelisted)
-    dbHandler.removeDatabases()
-} else {
-    printUsage(binary: CommandLine.arguments[0])
-    exit(2)
-}
-
-
-

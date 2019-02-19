@@ -1,5 +1,5 @@
 //
-//  main.swift
+//  Whitelist.swift
 //  RemoveBrowsingData
 //
 //  Created by Aapo Rautiainen on 12/02/2019.
@@ -30,30 +30,32 @@
 //  For more information, please refer to <http://unlicense.org/>
 //
 //
-
 import Foundation
 
-func printUsage(binary: String) {
-    print("Usage: \(binary) -w|--whitelist plist-file")
+class Whitelist {
+    var fileName:String
+    init(fileName:String) {
+        self.fileName = fileName
+    }
+    
+    func loadWhitelist() -> [String]
+    {
+        var format = PropertyListSerialization.PropertyListFormat.xml
+        var plistData: [String:AnyObject] = [:]
+        let plistPath: String? = Bundle.main.path(forResource: "whitelist", ofType: "plist")!
+        let plistXML = FileManager.default.contents(atPath: plistPath!)!
+
+        do
+        {
+            plistData = try PropertyListSerialization.propertyList(from: plistXML,
+                                                           options: .mutableContainersAndLeaves,
+                                                           format: &format) as! [String:AnyObject]
+        }
+        catch
+        {
+            print("Error reading plist: \(error), format: \(format)")
+        }
+        
+        return Array(plistData.keys)
+    }
 }
-
-if CommandLine.arguments.count != 3 {
-    printUsage(binary: CommandLine.arguments[0])
-    exit(2)
-}
-
-if CommandLine.arguments[1] == "-w" || CommandLine.arguments[1] == "--whitelist" {
-    let whitelisted = Whitelist(fileName: CommandLine.arguments[2]).loadWhitelist()
-    let cookieHandler = BrowserCookieHandler(whitelisted: whitelisted)
-    cookieHandler.deleteCookies()
-    let localstorageHandler = LocalStorageHandler(whitelisted: whitelisted)
-    localstorageHandler.removeLocalStorages()
-    let dbHandler = SiteDatabaseHandler(whitelisted: whitelisted)
-    dbHandler.removeDatabases()
-} else {
-    printUsage(binary: CommandLine.arguments[0])
-    exit(2)
-}
-
-
-

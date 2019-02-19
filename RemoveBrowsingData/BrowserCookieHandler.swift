@@ -1,5 +1,5 @@
 //
-//  main.swift
+//  BrowserCookies.swift
 //  RemoveBrowsingData
 //
 //  Created by Aapo Rautiainen on 12/02/2019.
@@ -30,30 +30,30 @@
 //  For more information, please refer to <http://unlicense.org/>
 //
 //
-
 import Foundation
 
-func printUsage(binary: String) {
-    print("Usage: \(binary) -w|--whitelist plist-file")
+class BrowserCookieHandler : HandlerBase {
+    
+    override init(whitelisted:[String]) {
+        super.init(whitelisted: whitelisted)
+    }
+    
+    func deleteCookies() {
+        let storage = HTTPCookieStorage.sharedCookieStorage(forGroupContainerIdentifier: "Cookies")
+        let cookies = storage.cookies
+        
+        if (cookies != nil)
+        {
+            print("Found \(cookies!.count) cookies")
+            
+            for cookie in cookies! {
+                
+                if (!isWhitelisted(site: cookie.domain)) {
+                    print("Delete cookie \(cookie.domain)")
+                    storage.deleteCookie(cookie)
+                }
+            }
+            
+        }
+    }
 }
-
-if CommandLine.arguments.count != 3 {
-    printUsage(binary: CommandLine.arguments[0])
-    exit(2)
-}
-
-if CommandLine.arguments[1] == "-w" || CommandLine.arguments[1] == "--whitelist" {
-    let whitelisted = Whitelist(fileName: CommandLine.arguments[2]).loadWhitelist()
-    let cookieHandler = BrowserCookieHandler(whitelisted: whitelisted)
-    cookieHandler.deleteCookies()
-    let localstorageHandler = LocalStorageHandler(whitelisted: whitelisted)
-    localstorageHandler.removeLocalStorages()
-    let dbHandler = SiteDatabaseHandler(whitelisted: whitelisted)
-    dbHandler.removeDatabases()
-} else {
-    printUsage(binary: CommandLine.arguments[0])
-    exit(2)
-}
-
-
-
